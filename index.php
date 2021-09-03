@@ -1,66 +1,64 @@
-<!DOCTYPE html>
-<html lang="PT">
 <?php
 error_reporting(E_ERROR | E_PARSE);
+session_start();
 require_once("connection/connection.php");
 
-//COOKIES
-
 if (isset($_GET['lang'])) {
-    $lang = $_GET['lang'];
-    setcookie("lang", $lang);
-} else
+    $lang=$_GET['lang'];
+    setcookie("lang",$lang);
+  }
+  else
     if (isset($_COOKIE['lang'])) {
-    $lang = $_COOKIE['lang'];
-} else {
-    setcookie("lang", "pt");
-    $lang = "pt";
-}
+      $lang=$_COOKIE['lang'];
+    }
+    else {
+      setcookie("lang","pt");
+      $lang="pt";
+    }
+
+if (!str_contains("pt,en",$lang)) {
+    setcookie("lang","pt");
+    $lang="pt";
+  }
+
+//recordset Variaveis
 $qVariaveis = "SELECT * FROM variaveis$lang";
 $rsVariaveis = $csogani->query($qVariaveis);
 
-if ($rsVariaveis === FALSE) {
-
+if($rsVariaveis === FALSE) {
     die("Erro no SQL: " . $qVariaveis . " Error: " . $csogani->error);
-}
+  }
+
 $rsVariaveis->data_seek(0);
-$row_rsVariaveis = $rsVariaveis->fetch_assoc();
-
-//$totalRows_rsVariaveis = $rsVariaveis->num_rows;
-
-//RecordSet Redes Sociais
-
-$qRedesSociais = "SELECT * FROM redessociais";
-$rsRedesSociais = $csogani->query($qRedesSociais);
-
-if ($rsRedesSociais === FALSE) {
-
-    die("Erro no SQL: " . $qRedesSociais . " Error: " . $csogani->error);
-}
-$rsRedesSociais->data_seek(0);
-
-//RecordSet Links Uteis
-
-$qLinks = "SELECT * FROM linksuteis";
-$rsLinks = $csogani->query($qLinks);
-
-if ($rsLinks === FALSE) {
-
-    die("Erro no SQL: " . $qLinks . " Error: " . $csogani->error);
-}
-$rsLinks->data_seek(0);
+$row_rsVariaveis=$rsVariaveis->fetch_assoc();
+//$totalRows_rsCD = $rsCD->num_rows;
 
 //recordset Categorias
 $qCategorias = "SELECT * FROM categorias$lang";
 $rsCategorias = $csogani->query($qCategorias);
 
-if ($rsCategorias === FALSE) {
+if($rsCategorias === FALSE) {
     die("Erro no SQL: " . $qCategorias . " Error: " . $csogani->error);
-}
+  }
 
 $rsCategorias->data_seek(0);
+//$row_rsVariaveis=$rsVariaveis->fetch_assoc();
+//$totalRows_rsCD = $rsCD->num_rows;
+
+//recordset Produtos em Destaque
+$qProdDestaque="select produtos$lang.*,categorias$lang.slug as slug from produtos$lang,categorias$lang where produtos$lang.destaque=1 and produtos$lang.categoria=categorias$lang.id";
+$rsProdDestaque=$csogani->query($qProdDestaque);
+
+if($rsProdDestaque === FALSE) {
+    die("Erro no SQL: " . $qProdDestaque . " Error: " . $csogani->error);
+  }
+
+$rsProdDestaque->data_seek(0);
 
 ?>
+
+<!DOCTYPE html>
+<html lang="pt">
 
 <head>
     <meta charset="UTF-8">
@@ -82,16 +80,72 @@ $rsCategorias->data_seek(0);
     <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css">
     <link rel="stylesheet" href="css/slicknav.min.css" type="text/css">
     <link rel="stylesheet" href="css/style.css" type="text/css">
+    <script type="text/javascript" src="functions.js"></script>
 </head>
 
-<body>
+<body onload="onload()">
     <!-- Page Preloder -->
     <div id="preloder">
         <div class="loader"></div>
     </div>
 
     <!-- Humberger Begin -->
-    <?php require_once("hamburger.php"); ?>
+    <div class="humberger__menu__overlay"></div>
+    <div class="humberger__menu__wrapper">
+        <div class="humberger__menu__logo">
+            <a href="#"><img src="img/logo.png" alt=""></a>
+        </div>
+        <div class="humberger__menu__cart">
+            <ul>
+                <li><a href="#"><i class="fa fa-heart"></i> <span>1</span></a></li>
+                <li><a href="#"><i class="fa fa-shopping-bag"></i> <span>3</span></a></li>
+            </ul>
+            <div class="header__cart__price">item: <span>$150.00</span></div>
+        </div>
+        <div class="humberger__menu__widget">
+            <div class="header__top__right__language">
+                <img src="img/language.png" alt="">
+                <div>English</div>
+                <span class="arrow_carrot-down"></span>
+                <ul>
+                    <li><a href="#">Spanis</a></li>
+                    <li><a href="#">English</a></li>
+                </ul>
+            </div>
+            <div class="header__top__right__auth">
+                <a href="#"><i class="fa fa-user"></i> Login</a>
+            </div>
+        </div>
+        <nav class="humberger__menu__nav mobile-menu">
+            <ul>
+                <li class="active"><a href="./index.php">Home</a></li>
+                <li><a href="./shop-grid.html">Shop</a></li>
+                <li><a href="#">Pages</a>
+                    <ul class="header__menu__dropdown">
+                        <li><a href="./shop-details.html">Shop Details</a></li>
+                        <li><a href="./shoping-cart.html">Shoping Cart</a></li>
+                        <li><a href="./checkout.html">Check Out</a></li>
+                        <li><a href="./blog-details.html">Blog Details</a></li>
+                    </ul>
+                </li>
+                <li><a href="./blog.html">Blog</a></li>
+                <li><a href="./contact.html">Contact</a></li>
+            </ul>
+        </nav>
+        <div id="mobile-menu-wrap"></div>
+        <div class="header__top__right__social">
+            <a href="#"><i class="fa fa-facebook"></i></a>
+            <a href="#"><i class="fa fa-twitter"></i></a>
+            <a href="#"><i class="fa fa-linkedin"></i></a>
+            <a href="#"><i class="fa fa-pinterest-p"></i></a>
+        </div>
+        <div class="humberger__menu__contact">
+            <ul>
+                <li><i class="fa fa-envelope"></i> hello@colorlib.com</li>
+                <li>Free Shipping for all Order of $99</li>
+            </ul>
+        </div>
+    </div>
     <!-- Humberger End -->
 
     <!-- Header Section Begin -->
@@ -109,11 +163,10 @@ $rsCategorias->data_seek(0);
                             <span>All departments</span>
                         </div>
                         <ul>
-                            <?php while ($row_rsCategorias = $rsCategorias->fetch_assoc()) {
-                                if ($row_rsCategorias['menu'] == true) { ?>
-                                    <li><a href="shop-grid.php?id=<?= $row_rsCategorias['id'] ?>"><?= $row_rsCategorias['categoria'] ?></a></li>
-                            <?php }
-                            } ?>
+                            <?php while ($row_rsCategorias = $rsCategorias->fetch_assoc()) { 
+                                if ($row_rsCategorias['menu']==true) { ?>
+                            <li><a href="shop-grid.php?id=<?= $row_rsCategorias['id']?>"><?= $row_rsCategorias['categoria']?></a></li>
+                            <?php } } ?>
                         </ul>
                     </div>
                 </div>
@@ -134,8 +187,8 @@ $rsCategorias->data_seek(0);
                                 <i class="fa fa-phone"></i>
                             </div>
                             <div class="hero__search__phone__text">
-                                <h5><?= $row_rsVariaveis['suporteTelefone'] ?></h5>
-                                <span><?= $row_rsVariaveis['suporteTexto'] ?></span>
+                                <h5><?= $row_rsVariaveis['suporteTelefone']?></h5>
+                                <span><?= $row_rsVariaveis['suporteTexto']?></span>
                             </div>
                         </div>
                     </div>
@@ -158,17 +211,16 @@ $rsCategorias->data_seek(0);
         <div class="container">
             <div class="row">
                 <div class="categories__slider owl-carousel">
-                    <?php
-                    $rsCategorias->data_seek(0);
-                    while ($row_rsCategorias = $rsCategorias->fetch_assoc()) {
-                        if ($row_rsCategorias['scroll'] == true) { ?>
-                            <div class="col-lg-3">
-                                <div class="categories__item set-bg" data-setbg="img/categories/<?= $row_rsCategorias['imagem'] ?>">
-                                    <h5><a href="shop-grid.php?id=<?= $row_rsCategorias['id'] ?>"><?= $row_rsCategorias['categoria'] ?></a></h5>
+                    <?php 
+                        $rsCategorias->data_seek(0); 
+                        while ($row_rsCategorias = $rsCategorias->fetch_assoc()) { 
+                            if ($row_rsCategorias['scroll']==true) { ?>
+                                <div class="col-lg-3">
+                                    <div class="categories__item set-bg" data-setbg="img/categories/<?= $row_rsCategorias['imagem']?>">
+                                        <h5><a href="shop-grid.php?id=<?= $row_rsCategorias['id']?>"><?= $row_rsCategorias['categoria']?></a></h5>
+                                    </div>
                                 </div>
-                            </div>
-                    <?php }
-                    } ?>
+                    <?php } }?>
                 </div>
             </div>
         </div>
@@ -176,7 +228,46 @@ $rsCategorias->data_seek(0);
     <!-- Categories Section End -->
 
     <!-- Featured Section Begin -->
-    <?php require_once("featured.php"); ?>
+    <section class="featured spad">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="section-title">
+                        <h2>Featured Product</h2>
+                    </div>
+                    <div class="featured__controls">
+                        <ul>
+                            <li class="active" data-filter="*">All</li>
+                                <?php 
+                                    $rsCategorias->data_seek(0); 
+                                    while ($row_rsCategorias = $rsCategorias->fetch_assoc()) { 
+                                    if ($row_rsCategorias['destaque']==true) { ?>
+                                        <li data-filter=".<?= $row_rsCategorias['slug']?>"><?= $row_rsCategorias['categoria']?></li>
+                            <?php } }?>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="row featured__filter">
+                <?php  while ($row_rsProdDestaque = $rsProdDestaque->fetch_assoc()) { ?>
+                <div class="col-lg-3 col-md-4 col-sm-6 mix <?= $row_rsProdDestaque['slug']?>">
+                    <div class="featured__item">
+                        <div class="featured__item__pic set-bg" data-setbg="img/product/<?= $row_rsProdDestaque['imagem']?>">
+                            <ul class="featured__item__pic__hover">
+                                <li><a href="#"><i class="fa fa-heart"></i></a></li>
+                                <li><a href="javascript:addToCart('<?= $row_rsProdDestaque['referencia']?>',<?= $row_rsProdDestaque['preco']?>)"><i class="fa fa-shopping-cart"></i></a></li>
+                            </ul>
+                        </div>
+                        <div class="featured__item__text">
+                            <h6><a href="#"><?= $row_rsProdDestaque['designacao']?></a></h6>
+                            <h5><?= $row_rsProdDestaque['preco']?> €</h5>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+        </div>
+    </section>
     <!-- Featured Section End -->
 
     <!-- Banner Begin -->
@@ -485,8 +576,7 @@ $rsCategorias->data_seek(0);
 <?php
 $rsVariaveis->free();
 $rsRedesSociais->free();
-$rsCategorias->free();
+$rsProdDestaque->free();
 $rsLinks->free();
 $csogani->close();
-
 ?>
