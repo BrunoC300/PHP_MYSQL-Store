@@ -26,11 +26,25 @@ function deleteFromCart(referencia) {
       var data = this.responseText;
       var hideLine = document.getElementById(referencia);
       hideLine.style.display = "none";
+      location.reload();
     }
   };
   xmlhttp.open("POST", "deletefromcart.php", true);
   xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   xmlhttp.send("referencia=" + referencia);
+}
+
+function updateCart(referencia, qty) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      var data = this.responseText;
+      location.reload();
+    }
+  };
+  xmlhttp.open("POST", "updatecart.php", true);
+  xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xmlhttp.send("referencia=" + referencia + "&qty=" + qty);
 }
 
 function onload() {

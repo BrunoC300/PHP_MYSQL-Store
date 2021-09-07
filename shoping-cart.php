@@ -219,7 +219,7 @@ $rsProdDestaque->data_seek(0);
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="shoping__cart__table">
+                    <div class="shoping__cart__table" id="carrinho">
                         <table>
                             <thead>
                                 <tr>
