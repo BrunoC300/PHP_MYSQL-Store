@@ -1,6 +1,7 @@
 <?php
 error_reporting(E_ERROR | E_PARSE);
 session_start();
+
 require_once("connection/connection.php");
 
 if (isset($_GET['lang'])) {
@@ -52,6 +53,61 @@ if ($rsProdDestaque === FALSE) {
 }
 
 $rsProdDestaque->data_seek(0);
+
+function test_input($data)
+{
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+// define variables and set to empty values
+$emailErr = $passwordErr = $loginErr = "";
+$email = $password = "";
+$error = false;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    if (empty($_POST["email"])) {
+        $emailErr = "Tem de indicar o e-mail!";
+        $error = true;
+    } else {
+        $email = test_input($_POST["email"]);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $emailErr = "Tem de indicar um e-mail válido!";
+            $error = true;
+        }
+    }
+
+    if (empty($_POST["password"])) {
+        $passwordErr = "Tem de indicar a password!";
+        $error = true;
+    } else {
+        $password = $_POST["password"];
+        if (strlen($password) < 6) {
+            $passwordErr = "A password tem de ter 6 caracteres no mínimo!";
+            $error = true;
+        }
+    }
+
+    if (!$error) {
+        $qRegisto = "SELECT * FROM users$lang WHERE email='$email' and password=md5('$password')";
+        $rsRegisto = $csogani->query($qRegisto);
+
+        if ($rsRegisto === FALSE) {
+            die("Erro no SQL: " . $qCategorias . " Error: " . $csogani->error);
+        }
+
+        if ($rsRegisto->num_rows == 1) {
+            $_SESSION['loginDone'] = true;
+            $_SESSION['usernameLog'] = $email;
+            header("Location: checkout.php");
+        } else {
+            $loginErr = "Login inválido! Tente novamente ou clique <a href='recover.php'>aqui</a> para recuperar a password!";
+        }
+    }
+}
 
 ?>
 <!DOCTYPE html>
@@ -202,10 +258,10 @@ $rsProdDestaque->data_seek(0);
             <div class="row">
                 <div class="col-lg-12 text-center">
                     <div class="breadcrumb__text">
-                        <h2>Shopping Cart</h2>
+                        <h2>Login</h2>
                         <div class="breadcrumb__option">
                             <a href="./index.php">Home</a>
-                            <span>Shopping Cart</span>
+                            <span>Login</span>
                         </div>
                     </div>
                 </div>
@@ -214,100 +270,33 @@ $rsProdDestaque->data_seek(0);
     </section>
     <!-- Breadcrumb Section End -->
 
-    <!-- Shoping Cart Section Begin -->
-    <section class="shoping-cart spad">
+    <!-- Checkout Section Begin -->
+    <section class="checkout spad">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="shoping__cart__table" id="carrinho">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th class="shoping__product">Products</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Total</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <?php
-                            if (isset($_COOKIE['cart'])) {
-                                $carrinho = unserialize($_COOKIE['cart']);
-                                $aPagar = 0;
-                            ?>
-                                <tbody>
-                                    <?php
-                                    foreach ($carrinho as &$item) {
-                                        $qProduto = "Select produtos$lang.* from produtos$lang where referencia='" . $item['ref'] . "'";
-                                        $rsProduto = $csogani->query($qProduto);
-                                        $rsProduto->data_seek(0);
-                                        $row_rsProduto = $rsProduto->fetch_assoc();
-                                        $aPagar = $aPagar + ($item['qtd'] * $row_rsProduto['preco']);
-                                    ?>
-                                        <tr id="<?= $row_rsProduto['referencia'] ?>">
-                                            <td class="shoping__cart__item">
-                                                <img src="img/product/<?= $row_rsProduto['imagem'] ?>" alt="" width="100px">
-                                                <h5><?= $row_rsProduto['designacao'] ?></h5>
-                                            </td>
-                                            <td class="shoping__cart__price">
-                                                <?= $row_rsProduto['preco'] ?> €
-                                            </td>
-                                            <td class="shoping__cart__quantity">
-                                                <div class="quantity">
-                                                    <div class="pro-qty">
-                                                        <input type="text" value="<?= $item['qtd'] ?>">
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="shoping__cart__total">
-                                                <?= (number_format($row_rsProduto['preco'] * $item['qtd'], 2)) ?> €
-                                            </td>
-                                            <td class="shoping__cart__item__close">
-                                                <a href="javascript:deleteFromCart('<?= $row_rsProduto['referencia'] ?>')"><span class="icon_close"></span></a>
-                                            </td>
-                                        </tr>
-                                    <?php }
-                                    $rsProduto->free();
-                                    ?>
-                                </tbody>
-                            <?php } ?>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="shoping__cart__btns">
-                        <a href="index.php" class="primary-btn cart-btn">CONTINUE SHOPPING</a>
-                        <a href="#" class="primary-btn cart-btn cart-btn-right"><span class="icon_loading"></span>
-                            Upadate Cart</a>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="shoping__continue">
-                        <div class="shoping__discount">
-                            <h5>Discount Codes</h5>
-                            <form action="#">
-                                <input type="text" placeholder="Enter your coupon code">
-                                <button type="submit" class="site-btn">APPLY COUPON</button>
-                            </form>
+            <div class="checkout__form">
+                <h4>Login</h4>
+                <form method="POST" action="login.php">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12">
+
+                            <div class="checkout__input">
+                                <p>E-mail<span>*</span><span style="color: red;"><?= $emailErr ?></span></p>
+                                <input type="email" name="email" value="<?= $email ?>" required>
+                            </div>
+
+                            <div class="checkout__input">
+                                <p>Password<span>*</span><span style="color: red;"><?= $passwordErr ?></span></p>
+                                <input type="password" name="password" value="<?= $password ?>" required>
+                            </div>
+                            <h5><span style="color: red;"><?= $loginErr ?></span>
+                                <button type="submit" class="site-btn" style="width: 100%;">LOGIN</button>
+                                <h6 style="margin-top: 15px;">Ainda não tem conta? Registe-se <a href="register.php">aqui!</a></h6>
                         </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="shoping__checkout">
-                        <h5>Cart Total</h5>
-                        <ul>
-                            <li>Subtotal <span><?= number_format($aPagar, 2) ?> €</span></li>
-                            <li>Total <span><?= number_format($aPagar, 2) ?> €</span></li>
-                        </ul>
-                        <a href="checkout.php" class="primary-btn">PROCEED TO CHECKOUT</a>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </section>
-    <!-- Shoping Cart Section End -->
+    <!-- Checkout Section End -->
 
     <!-- Footer Section Begin -->
     <?php require_once("footer.php"); ?>
@@ -322,6 +311,7 @@ $rsProdDestaque->data_seek(0);
     <script src="js/mixitup.min.js"></script>
     <script src="js/owl.carousel.min.js"></script>
     <script src="js/main.js"></script>
+
 
 
 </body>
